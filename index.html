@@ -79,12 +79,17 @@
       position:relative; border-radius:12px; overflow:hidden;
       background:var(--bg2);
       border: 1px solid rgba(255,255,255,0.08);
-      aspect-ratio: 16/9;
-      display:grid; place-items:center; margin-bottom:14px;
+      display:flex; align-items:center; justify-content:center; 
+      margin-bottom:14px;
+      min-height:200px;
+      max-height:400px;
+      width:100%;
     }
     .gifwrap img{
-      width:100%; height:100%; object-fit:contain; display:block; opacity:.95;
-      background:var(--bg2);
+      max-width:100%; max-height:100%; 
+      width:auto; height:auto;
+      object-fit:contain; display:block; opacity:.95;
+      border-radius:8px;
     }
 
     h1{
@@ -419,11 +424,30 @@
     function tryLoadGif(url){
       const img = new Image();
       img.onload = ()=>{ 
+        // Berechne optimale Container-Größe basierend auf GIF-Dimensionen
+        const gifWidth = img.naturalWidth;
+        const gifHeight = img.naturalHeight;
+        const containerWidth = elGif.parentElement.clientWidth;
+        
+        // Berechne Aspect Ratio
+        const aspectRatio = gifWidth / gifHeight;
+        
+        // Bestimme optimale Höhe basierend auf Container-Breite
+        let optimalHeight = containerWidth / aspectRatio;
+        
+        // Begrenze Höhe zwischen min und max
+        optimalHeight = Math.max(200, Math.min(400, optimalHeight));
+        
+        // Setze dynamische Container-Höhe
+        elGif.parentElement.style.height = optimalHeight + 'px';
+        
+        // Lade das GIF
         elGif.src = url; 
         elGif.style.opacity = '1';
       };
       img.onerror = ()=> {
         // Fallback to first fallback GIF
+        elGif.parentElement.style.height = '300px'; // Standard-Höhe für Fallback
         elGif.src = FALLBACK_GIFS[0];
         elGif.style.opacity = '1';
       };
@@ -479,21 +503,32 @@
     // shuffle preview (nur visuell, Tageswert bleibt!)
     document.getElementById('shufflePreview').addEventListener('click', ()=>{
       previewOffset = (previewOffset + 1) % COMPLIMENTS.length;
-      const nowParts = partsFrom(new Date());
-      updateUI(dayIndex(rotationYMD(nowParts)) + previewOffset);
+      updateUI();
     });
 
-    // copy link
-    document.getElementById('copyLink').addEventListener('click', async ()=>{
-      try{
-        await navigator.clipboard.writeText(location.href);
-        toast("Link kopiert 💌");
-      }catch(e){
-        toast("Kopieren nicht möglich – markiere die Adresszeile ❤️");
+    // initial load
+    updateUI();
+
+    // Resize-Handler für dynamische GIF-Anpassung
+    window.addEventListener('resize', ()=>{
+      const currentGif = elGif.src;
+      if(currentGif && !currentGif.includes('data:')) {
+        // Lade das aktuelle GIF neu mit neuen Dimensionen
+        tryLoadGif(currentGif);
       }
     });
 
     // hearts on click
+    document.addEventListener('click', (e)=>{
+      if(e.target.closest('button')) return;
+      makeHeart(e.clientX, e.clientY);
+    });
+
+    // copy link
+    document.getElementById('copyLink').addEventListener('click', ()=>{
+      navigator.clipboard?.writeText(window.location.href);
+    });
+
     window.addEventListener('pointerdown', e=>{
       makeHeart(e.clientX, e.clientY);
     });
@@ -551,8 +586,6 @@
       }
     })();
 
-    // initial paint
-    updateUI();
   </script>
 </body>
 </html>
