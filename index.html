@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Für Надя ✨ | Dein Tageskompliment</title>
-  <meta name="description" content="Ein kleines tägliches Kompliment – jeden Tag um 21:00 Uhr deutscher Zeit, nur für Nadja." />
+  <meta name="description" content="Ein kleines tägliches Kompliment – jeden Tag um 23:00 Uhr deutscher Zeit, nur für Nadja." />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
   <style>
@@ -143,7 +143,7 @@
 
   <header>
     <div class="brand"><span class="dot"></span><span>Für Nadja ✨</span></div>
-    <div class="next" id="nextInfo">Nächstes Kompliment um 21:00 (deutsche Zeit)</div>
+    <div class="next" id="nextInfo">Nächstes Kompliment um 23:00 (deutsche Zeit)</div>
   </header>
 
   <main class="card" id="card">
@@ -159,11 +159,11 @@
       <span class="pill">🗓️ <span id="todayLabel"></span></span>
     </div>
 
-    <div class="hint">Tipp: Tippe irgendwo ins Fenster für ein kleines ❤️-Feuerwerk.</div>
+    <div class="hint">Совет: нажми в любом месте и насладись 💖-фейерверком :3</div>
   </main>
 
   <footer>
-    <div>Mit Liebe gebaut. Твоё маленькое 21:00-окошко радости. ✨</div>
+    <div>Mit Liebe gebaut. Твоё маленькое 23:00-окошко радости. ✨</div>
   </footer>
 
   <script>
@@ -171,12 +171,12 @@
     // Config
     // -----------------------------
     const TIMEZONE = "Europe/Berlin";
-    const ROTATE_HOUR = 21; // 21:00 deutscher Zeit
+    const ROTATE_HOUR = 23; // 23:00 deutscher Zeit
     const TENOR_API_KEY = "AIzaSyCCrf5nV6vaaeUnrSPzRffETe72N4sSx1k"; // Tenor API Key
     const NICKNAMES = ["Надя","Наденька","Надюша","Надюшка","Надечка","Надежда моя","Наденька-солнышко","Надю"];
     const NAME_BASE = "Надя";
 
-    // --------- Tenor API Search Terms für jedes Thema ---------
+    // --------- Tenor API Search Terms ---------
     const TENOR_SEARCH_TERMS = {
       hearts: [
         "bubu dudu love","kakao friends heart","sanrio heart","hello kitty heart",
@@ -237,10 +237,8 @@
       ]
     };
 
-    // Cache für Tenor GIFs (um API-Aufrufe zu reduzieren)
+    // Cache & Fallbacks
     const tenorCache = {};
-
-    // Fallback GIFs falls Tenor API nicht verfügbar
     const FALLBACK_GIFS = [
       "https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif",
       "https://media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif",
@@ -340,7 +338,7 @@
     ];
 
     // -----------------------------
-    // Utilities: TZ helpers
+    // Time helpers
     // -----------------------------
     const fmtFull = new Intl.DateTimeFormat('en-CA', {
       timeZone: TIMEZONE, hour12:false,
@@ -365,6 +363,7 @@
       return { year:d.getUTCFullYear(), month:d.getUTCMonth()+1, day:d.getUTCDate() };
     }
     function rotationYMD(nowParts){
+      // "Tag" beginnt um 23:00 Berlin – vor 23:00 gehört noch zum Vortag
       if(nowParts.hour < ROTATE_HOUR){
         return previousYMD(nowParts);
       }
@@ -508,18 +507,20 @@
     }
 
     // tick
-    let previewOffset = 0; // bleibt 0, da es keinen Preview-Button mehr gibt
+    let previewOffset = 0;
     setInterval(()=>{
       const nowParts = partsFrom(new Date());
       const realIdx = dayIndex(rotationYMD(nowParts));
       updateUI(realIdx + previewOffset);
+
+      // harte Umschalt-Logik exakt bei 23:00 Berlin
       if(nowParts.hour===ROTATE_HOUR && nowParts.minute===0 && nowParts.second===0){
         previewOffset = 0;
         updateUI();
       }
     }, 1000);
 
-    // Resize-Handler für dynamische GIF-Anpassung
+    // Resize-Handler
     window.addEventListener('resize', ()=>{
       const currentGif = elGif.src;
       if(currentGif && !currentGif.includes('data:')) {
@@ -527,9 +528,8 @@
       }
     });
 
-    // hearts on click (ein Handler reicht)
+    // hearts on click
     window.addEventListener('pointerdown', e=>{ makeHeart(e.clientX, e.clientY); });
-
     function makeHeart(x,y){
       const el = document.createElement('div');
       el.className='heart';
@@ -540,7 +540,7 @@
       setTimeout(()=> el.remove(), 950);
     }
 
-    // ✨ background stars – immer ausführen
+    // ✨ background stars
     (function makeStars(){
       const sky = document.getElementById('sky');
       const count = 38;
@@ -548,10 +548,10 @@
         const s = document.createElement('span');
         s.className = 'star';
         s.textContent = '✨';
-        const size = (Math.random()*22)+10; // 10..32px
-        const left = Math.random()*100;     // vw
-        const dur = 22 + Math.random()*34;  // 22..56s
-        const delay = Math.random()*-dur;   // negative for staggered
+        const size = (Math.random()*22)+10;
+        const left = Math.random()*100;
+        const dur = 22 + Math.random()*34;
+        const delay = Math.random()*-dur;
         s.style.left = left+'vw';
         s.style.fontSize = size+'px';
         s.style.animationDuration = `${dur}s, ${6 + Math.random()*6}s`;
