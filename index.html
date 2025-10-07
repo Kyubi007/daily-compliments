@@ -83,7 +83,8 @@
       display:grid; place-items:center; margin-bottom:14px;
     }
     .gifwrap img{
-      width:100%; height:100%; object-fit:cover; display:block; opacity:.95
+      width:100%; height:100%; object-fit:contain; display:block; opacity:.95;
+      background:var(--bg2);
     }
 
     h1{
@@ -193,17 +194,17 @@
 
     // --------- Tenor API Search Terms für jedes Thema ---------
     const TENOR_SEARCH_TERMS = {
-      hearts: ["love heart", "cute heart", "romantic heart", "heart animation", "love cute"],
-      cozy: ["cozy home", "warm hug", "comfort", "cozy winter", "hygge"],
-      rain: ["rain aesthetic", "cozy rain", "rain window", "peaceful rain", "rain drops"],
-      sun: ["sunshine happy", "bright sun", "sunny day", "golden hour", "warm light"],
-      sketch: ["drawing art", "creative sketch", "art process", "doodle cute", "artistic"],
-      design: ["design process", "creative work", "digital art", "modern design", "aesthetic"],
-      sport: ["motivation fitness", "active lifestyle", "workout energy", "sports fun", "healthy"],
-      future: ["space dreams", "future tech", "cosmic", "stars universe", "dreamy space"],
-      cat: ["cute cat", "adorable kitten", "cat love", "fluffy cat", "cat cuddle"],
-      calm: ["peaceful zen", "meditation calm", "relaxing nature", "serene peaceful", "mindful"],
-      stars: ["starry night", "magical stars", "cosmic beauty", "night sky", "sparkle magic"]
+      hearts: ["aesthetic heart", "pink heart animation", "cute heart sparkle", "soft heart", "pastel heart"],
+      cozy: ["aesthetic cozy", "soft blanket", "warm coffee", "hygge aesthetic", "cozy vibes"],
+      rain: ["aesthetic rain", "window rain drops", "cozy rain", "rain aesthetic vibes", "peaceful rain"],
+      sun: ["golden hour aesthetic", "soft sunlight", "warm aesthetic", "sunshine vibes", "golden light"],
+      sketch: ["aesthetic drawing", "cute doodle", "soft art", "pastel drawing", "aesthetic sketch"],
+      design: ["aesthetic design", "soft colors", "pastel aesthetic", "minimalist design", "cute graphics"],
+      sport: ["aesthetic workout", "soft fitness", "yoga aesthetic", "wellness vibes", "healthy aesthetic"],
+      future: ["aesthetic space", "soft cosmos", "dreamy stars", "pastel galaxy", "cosmic aesthetic"],
+      cat: ["aesthetic cat", "soft kitten", "cute cat aesthetic", "pastel cat", "kawaii cat"],
+      calm: ["aesthetic calm", "soft nature", "peaceful aesthetic", "zen vibes", "serene nature"],
+      stars: ["aesthetic stars", "soft sparkle", "dreamy night", "pastel stars", "cosmic sparkle"]
     };
 
     // Cache für Tenor GIFs (um API-Aufrufe zu reduzieren)
@@ -353,19 +354,38 @@
       const searchTerm = searchTerms[dayIndex % searchTerms.length];
       
       try {
-        const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${TENOR_API_KEY}&client_key=nadja_compliments&limit=20&media_filter=gif&ar_range=all`);
+        const response = await fetch(`https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${TENOR_API_KEY}&client_key=nadja_compliments&limit=50&media_filter=gif&contentfilter=high&ar_range=standard`);
         
         if (!response.ok) {
           throw new Error(`Tenor API Error: ${response.status}`);
         }
         
         const data = await response.json();
-        const gifs = data.results?.map(result => result.media_formats?.gif?.url).filter(Boolean) || [];
+        
+        // Filtere GIFs für bessere Qualität
+        const filteredGifs = data.results?.filter(result => {
+          const gif = result.media_formats?.gif;
+          if (!gif) return false;
+          
+          // Filtere nach Aspect Ratio (nicht zu schmal/breit)
+          const width = parseInt(gif.dims?.[0]) || 0;
+          const height = parseInt(gif.dims?.[1]) || 0;
+          if (width && height) {
+            const ratio = width / height;
+            if (ratio < 0.5 || ratio > 3) return false; // Extreme Ratios ausschließen
+          }
+          
+          // Filtere nach Dateigröße (nicht zu groß)
+          const size = parseInt(gif.size) || 0;
+          if (size > 5000000) return false; // Über 5MB ausschließen
+          
+          return true;
+        }).map(result => result.media_formats.gif.url) || [];
         
         // Cache das Ergebnis
-        tenorCache[cacheKey] = gifs;
+        tenorCache[cacheKey] = filteredGifs;
         
-        return gifs;
+        return filteredGifs;
       } catch (error) {
         console.warn('Tenor API failed:', error);
         return FALLBACK_GIFS;
