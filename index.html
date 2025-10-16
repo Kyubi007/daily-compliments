@@ -189,6 +189,41 @@
     }
     .badge-item { transition: transform 0.2s ease; }
     .badge-item:hover { transform: translateY(-2px); }
+    /* Mobile Performance Optimierungen */
+    @media (max-width: 768px) {
+      /* Reduziere Blur für bessere Performance */
+      :root{ --blur: 8px; }
+      
+      /* Vereinfache Backdrop-Filter auf Mobile */
+      .card{ backdrop-filter: blur(8px); }
+      .modal{ backdrop-filter: blur(2px); }
+      
+      /* Reduziere Animationskomplexität */
+      .star{ 
+        animation-duration: 35s, 8s !important; 
+        filter: none !important;
+      }
+      
+      /* Optimiere GIF-Container */
+      .gifwrap{ 
+        min-height:150px;
+        max-height:300px;
+      }
+      
+      /* Kleinere Fonts für bessere Render-Performance */
+      h1{ font-size: clamp(22px, 4vw, 32px); }
+      .compliment{ font-size: clamp(16px, 2.2vw, 20px); }
+    }
+    
+    /* Safari-spezifische Fixes */
+    @supports (-webkit-touch-callout: none) {
+      /* iOS Safari */
+      .card, .modal-card{ 
+        backdrop-filter: none;
+        background: rgba(17, 19, 27, 0.95);
+      }
+      .star{ will-change: auto; } /* Safari mag will-change nicht */
+    }
     /* ===== Emoji Memory Modal ===== */
     .modal{
       position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
@@ -663,11 +698,17 @@
       const searchTerm = terms[dayIndex % terms.length];
 
       try {
-        const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${TENOR_API_KEY}&client_key=nadja_compliments&limit=50&media_filter=gif&contentfilter=high&ar_range=standard`;
+        // Kleinere GIFs auf Mobile laden
+        const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const limit = isMobile ? 30 : 50;
+        const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${TENOR_API_KEY}&client_key=nadja_compliments&limit=${limit}&media_filter=gif&contentfilter=high&ar_range=standard`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Tenor API Error: ${response.status}`);
 
         const data = await response.json();
+        // isMobile wurde bereits oben deklariert
+        const maxSize = isMobile ? 2000000 : 5000000; // 2MB vs 5MB
+        
         const filtered = data.results?.filter(r => {
           const gif = r.media_formats?.gif;
           if (!gif) return false;
@@ -675,7 +716,8 @@
           if (w && h) {
             const ratio = w/h; if (ratio < 0.5 || ratio > 3) return false;
           }
-          const size = parseInt(gif.size)||0; if (size > 5000000) return false;
+          const size = parseInt(gif.size)||0; 
+          if (size > maxSize) return false; // Kleinere GIFs auf Mobile!
           return true;
         }).map(r => r.media_formats.gif.url) || [];
 
@@ -773,21 +815,40 @@ elNextInfo.textContent = `Nächstes Kompliment um ${String(ROTATE_HOUR).padStart
       }
     }, 1000);
 
-    // Resize-Handler
+    // Resize-Handler mit Debounce
+    let resizeTimeout;
     window.addEventListener('resize', ()=>{
-      const currentGif = elGif.src;
-      if(currentGif && !currentGif.includes('data:')) {
-        tryLoadGif(currentGif);
-      }
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(()=>{
+        const currentGif = elGif.src;
+        if(currentGif && !currentGif.includes('data:')) {
+          tryLoadGif(currentGif);
+        }
+      }, 200); // Warte 200ms nach letztem Resize
     });
 
     // hearts on click
-    window.addEventListener('pointerdown', e=>{ makeHeart(e.clientX, e.clientY); });
+    // Hearts optimiert für Mobile
+    let lastHeartTime = 0;
+    const heartThrottle = 150; // Max 1 Herz pro 150ms auf Mobile
+    
+    window.addEventListener('pointerdown', e=>{
+      const now = Date.now();
+      const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      
+      // Throttle auf Mobile
+      if(isMobile && now - lastHeartTime < heartThrottle) return;
+      lastHeartTime = now;
+      
+      makeHeart(e.clientX, e.clientY);
+    });
+    
     function makeHeart(x,y){
       const el = document.createElement('div');
       el.className='heart';
       el.textContent = Math.random() < .5 ? '❤️' : '💖';
-      el.style.left = x+'px'; el.style.top = y+'px';
+      el.style.left = x+'px';
+      el.style.top = y+'px';
       el.style.zIndex = 1000;
       document.body.appendChild(el);
       setTimeout(()=> el.remove(), 950);
@@ -796,7 +857,9 @@ elNextInfo.textContent = `Nächstes Kompliment um ${String(ROTATE_HOUR).padStart
     // ✨ background stars
     (function makeStars(){
       const sky = document.getElementById('sky');
-      const count = 38;
+      // Weniger Sterne auf Mobile für bessere Performance
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const count = isMobile ? 12 : 38;  // 12 statt 38 auf Mobile!
       for(let i=0;i<count;i++){
         const s = document.createElement('span');
         s.className = 'star';
