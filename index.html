@@ -60,6 +60,35 @@
       font-weight:800; letter-spacing:.2px; display:flex; align-items:center; gap:10px
     }
     .brand .dot{width:10px; height:10px; border-radius:50%; background:linear-gradient(145deg,var(--accent),#ffb3d9)}
+    /* Tinten-Kalligrafie SVG */
+    #inkSig{ 
+      margin-left:10px; 
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.35));
+      transition: filter 0.3s ease;
+    }
+    #inkSig path{
+      fill:none; 
+      stroke: var(--text); 
+      stroke-width:2.5; 
+      stroke-linecap:round; 
+      stroke-linejoin:round;
+      vector-effect: non-scaling-stroke;
+      stroke-dasharray: var(--len, 400);
+      stroke-dashoffset: var(--len, 400);
+    }
+    @media (prefers-reduced-motion: no-preference){
+      .ink-anim path{ 
+        animation: inkWrite 2.2s cubic-bezier(.25,.8,.25,1) forwards; 
+      }
+      @keyframes inkWrite{
+        to{ stroke-dashoffset: 0; }
+      }
+    }
+    /* Dezenter Tintenschein nach dem Schreiben */
+    #inkSig.done path{ 
+      filter: drop-shadow(0 0 8px rgba(255,128,191,.45)); 
+    }
+    .brand{ cursor: pointer; user-select: none; }
     .next{
       color:var(--muted); font-size:14px
     }
@@ -114,6 +143,24 @@
       padding:8px 12px; border-radius:100px; background:var(--glass); border:var(--ring)
     }
     .pill b{color:var(--text)}
+    .memory-btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 14px; border-radius:100px; 
+      background: linear-gradient(145deg, var(--accent), #ffb3d9);
+      border:1px solid rgba(255,255,255,.12);
+      color:#2b0f1c; font-weight:700; cursor:pointer;
+      font-family:inherit; font-size:14px;
+      box-shadow:0 4px 12px rgba(255,128,191,.25);
+      transition: transform .08s ease, box-shadow .2s ease;
+    }
+    .memory-btn:hover{
+      transform: translateY(-1px);
+      box-shadow:0 6px 16px rgba(255,128,191,.35);
+    }
+    .memory-btn:active{ 
+      transform: translateY(1px); 
+      box-shadow:0 2px 8px rgba(255,128,191,.18);
+    }
 
     footer{
       max-width:var(--maxw);
@@ -135,6 +182,102 @@
     .note{ margin-top:10px; font-size:12px; color:var(--muted) }
     .hint{ font-size:12px; color:var(--muted); margin-top:8px }
     a,button{font-family:inherit}
+    /* Streak Gamification */
+    @keyframes streak-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px 8px rgba(255, 107, 107, 0.2); }
+    }
+    .badge-item { transition: transform 0.2s ease; }
+    .badge-item:hover { transform: translateY(-2px); }
+    /* ===== Emoji Memory Modal ===== */
+    .modal{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.45); z-index: 999; backdrop-filter: blur(4px);
+    }
+    .modal[hidden]{ display:none !important; }
+    .modal-card{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border: var(--ring); border-radius:16px; box-shadow: var(--shadow);
+      width:min(92vw, 860px); max-height:90vh; overflow-y:auto; padding:18px; position:relative;
+    }
+    .modal-close{
+      position:absolute; top:8px; right:10px; font-size:28px; line-height:1;
+      background:transparent; border:none; color:var(--text); cursor:pointer; padding:4px 8px;
+      transition: transform 0.2s ease;
+    }
+    .modal-close:hover{ transform: scale(1.1); color:var(--accent); }
+    #memoryTitle{ margin:0 0 12px; font-size:24px; }
+    .memory-controls{ 
+      display:flex; gap:10px; align-items:center; margin:8px 0 10px; flex-wrap:wrap;
+    }
+    .memory-controls label{ display:flex; align-items:center; gap:6px; }
+    .memory-controls select{
+      background:var(--bg2); color:var(--text); border:var(--ring); border-radius:8px;
+      padding:6px 10px; font-family:inherit; cursor:pointer;
+    }
+    .memory-controls button{
+      background:linear-gradient(145deg, var(--accent-2), #c5d3ff); color:#0f1a3a;
+      border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:600;
+      transition: transform 0.1s ease;
+    }
+    .memory-controls button:active{ transform: translateY(1px); }
+    .memory-stats{ color:var(--muted); margin-bottom:12px; font-size:14px; }
+    .memory-stats span{ color:var(--text); font-weight:600; }
+    
+    .memory-grid{
+      display:grid; gap:8px; user-select:none; margin-top:12px;
+      min-height:200px;
+      width:100%;
+    }
+    .memory-grid[data-mode="4x4"]{ grid-template-columns: repeat(4, minmax(56px,1fr)); }
+    .memory-grid[data-mode="5x6"]{ grid-template-columns: repeat(6, minmax(44px,1fr)); }
+    .memory-grid[data-mode="daily"]{ grid-template-columns: repeat(5, minmax(48px,1fr)); }
+    
+    .tile{
+      position:relative; width:100%; padding-top: 120%;
+      background:transparent; border:none; cursor:pointer; padding:0;
+      min-width:44px; min-height:60px;
+    }
+    .tile-face{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:10px; border:1px solid rgba(255,255,255,.1);
+      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      font-size: clamp(32px, 7vw, 52px);
+      transition: background 0.2s ease, transform 0.1s ease;
+      color: var(--muted);
+    }
+    .tile.flipped .tile-face{
+      background: linear-gradient(145deg, #fff, #f0f0f0);
+      color: #000;
+      transform: scale(1.05);
+    }
+    .tile[disabled]{ cursor:not-allowed; }
+    .tile[disabled] .tile-inner{ opacity:0.6; }
+    
+    @media (prefers-reduced-motion: reduce){
+      .tile-inner{ transition:none; }
+      .tile.flipped .tile-inner{ 
+        transform:none; 
+        background:var(--accent-2); 
+      }
+      .tile.flipped .tile-front{ display:none; }
+      .tile.flipped .tile-back{ 
+        transform:none; 
+        display:flex;
+        z-index:3;
+      }
+    }
+    
+
+    .tile:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:10px; }
+    
+    @keyframes victory-pulse{
+      0%, 100%{ transform: scale(1); }
+      50%{ transform: scale(1.05); }
+    }
+
     ::selection{background:#ffd2ec; color:#2b0f1c}
   </style>
 </head>
@@ -142,7 +285,20 @@
   <div class="sky" id="sky" aria-hidden="true"></div>
 
   <header>
-    <div class="brand"><span class="dot"></span><span>Für Nadja ✨</span></div>
+    <div class="brand" id="brand">
+      <span class="dot"></span><span>Für Nadja ✨</span>
+      <!-- Inline-Signatur: Надя in kyrillischer Kalligrafie -->
+      <svg id="inkSig" viewBox="0 0 320 80" width="140" height="35" aria-hidden="true" focusable="false">
+        <!-- H (Н) - Elegant geschwungen -->
+        <path d="M20,25 L20,60 M20,42 Q30,38 40,42 M40,25 L40,60" />
+        <!-- A (А) - Mit schönem Bogen -->
+        <path d="M60,60 L75,25 L90,60 M67,48 L83,48" />
+        <!-- D (Д) - Mit Serifen -->
+        <path d="M110,25 L110,55 L135,55 L135,25 M105,60 L105,55 M140,60 L140,55" />
+        <!-- YA (Я) - Elegant geschwungen -->
+        <path d="M160,25 Q180,25 180,42 Q180,60 160,60 L155,60 M180,42 L180,60" />
+      </svg>
+    </div>
     <div class="next" id="nextInfo">Nächstes Kompliment um 23:00 (deutsche Zeit)</div>
   </header>
 
@@ -157,10 +313,35 @@
     <div class="meta">
       <span class="pill">⏳ <b id="countdown">—:—:—</b> bis zum nächsten Kompliment</span>
       <span class="pill">🗓️ <span id="todayLabel"></span></span>
+      <button class="memory-btn" id="openMemory" type="button" aria-haspopup="dialog">🎮 Memory</button>
     </div>
 
     <div class="hint">Совет: нажми в любом месте и насладись 💖-фейерверком :3</div>
   </main>
+
+  <!-- Emoji Memory Modal -->
+  <div id="memoryOverlay" class="modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memoryTitle">
+    <div class="modal-card" role="document">
+      <button class="modal-close" id="memoryClose" type="button" aria-label="Schließen">×</button>
+      <h2 id="memoryTitle">Emoji Memory 🎮</h2>
+      
+      <div class="memory-controls">
+        <label>Modus:
+          <select id="memoryMode">
+            <option value="daily">Daily (deterministisch)</option>
+            <option value="4x4">4 × 4 (8 Paare)</option>
+            <option value="5x6">5 × 6 (15 Paare)</option>
+          </select>
+        </label>
+        <button id="memoryRestart" type="button">🔄 Neu mischen</button>
+      </div>
+      
+      <div id="memoryStats" class="memory-stats">
+        ⏱️ <span id="memTime">00:00</span> • 🎯 Züge: <span id="memMoves">0</span> • 🏆 Best: <span id="memBest">—</span>
+      </div>
+      <div id="memoryGrid" class="memory-grid" aria-live="polite"></div>
+    </div>
+  </div>
 
   <footer>
     <div>Mit Liebe gebaut. Твоё маленькое 23:00-окошко радости. ✨</div>
@@ -175,6 +356,74 @@
     const TENOR_API_KEY = "AIzaSyCCrf5nV6vaaeUnrSPzRffETe72N4sSx1k"; // Tenor API Key
     const NICKNAMES = ["Надя","Наденька","Надюша","Надюшка","Надечка","Надежда моя","Наденька-солнышко","Надю"];
     const NAME_BASE = "Надя";
+    // --------- Streak & Gamification ---------
+    const STREAK_CONFIG = {
+      milestones: [
+        { count: 3, emoji: '🥉', label: '3 Tage' },
+        { count: 7, emoji: '🥈', label: '1 Woche' },
+        { count: 14, emoji: '🥇', label: '2 Wochen' },
+        { count: 30, emoji: '🏆', label: '1 Monat' },
+        { count: 50, emoji: '💫', label: '50 Tage' },
+        { count: 100, emoji: '👑', label: '100 Tage!' }
+      ]
+    };
+
+    class StreakManager {
+      constructor() {
+        this.storageKey = 'nadja_streak_data';
+        this.canUseStorage = this.checkStorage();
+      }
+      checkStorage() {
+        try { const test = '__test__'; localStorage.setItem(test, test); localStorage.removeItem(test); return true; } catch (e) { return false; }
+      }
+      loadData() {
+        if (!this.canUseStorage) return { current: 0, best: 0, lastVisit: null, milestones: [] };
+        try { const raw = localStorage.getItem(this.storageKey); if (!raw) return { current: 0, best: 0, lastVisit: null, milestones: [] }; return JSON.parse(raw); } catch (e) { return { current: 0, best: 0, lastVisit: null, milestones: [] }; }
+      }
+      saveData(data) { if (!this.canUseStorage) return; try { localStorage.setItem(this.storageKey, JSON.stringify(data)); } catch (e) {} }
+      getDayKey(nowParts) { const rotYMD = rotationYMD(nowParts); return `${rotYMD.year}-${String(rotYMD.month).padStart(2, '0')}-${String(rotYMD.day).padStart(2, '0')}`; }
+      update(nowParts) {
+        const data = this.loadData();
+        const todayKey = this.getDayKey(nowParts);
+        if (!data.lastVisit) { data.current = 1; data.best = 1; data.lastVisit = todayKey; data.milestones = this.checkNewMilestone(0, 1); this.saveData(data); return { ...data, isNewMilestone: data.milestones.length > 0 }; }
+        if (data.lastVisit === todayKey) return { ...data, isNewMilestone: false };
+        const lastDate = new Date(data.lastVisit + 'T00:00:00Z'); const todayDate = new Date(todayKey + 'T00:00:00Z');
+        const diffMs = todayDate - lastDate; const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)); const oldCurrent = data.current;
+        if (diffDays === 1) { data.current += 1; if (data.current > data.best) { data.best = data.current; } } else { data.current = 1; }
+        data.lastVisit = todayKey; const newMilestones = this.checkNewMilestone(oldCurrent, data.current);
+        data.milestones = [...new Set([...(data.milestones || []), ...newMilestones])]; this.saveData(data); return { ...data, isNewMilestone: newMilestones.length > 0 };
+      }
+      checkNewMilestone(oldCount, newCount) { const achieved = []; STREAK_CONFIG.milestones.forEach(m => { if (newCount >= m.count && oldCount < m.count) { achieved.push(m.count); } }); return achieved; }
+      getAchievedBadges(milestones) { if (!milestones || !Array.isArray(milestones)) return []; return STREAK_CONFIG.milestones.filter(m => milestones.includes(m.count)); }
+    }
+
+    const streakManager = new StreakManager();
+    function renderStreakUI(streakData) {
+      const metaDiv = document.querySelector('.meta'); if (!metaDiv) return;
+      const oldStreakPill = document.getElementById('streakPill'); const oldBadgesDiv = document.getElementById('badgesDiv');
+      if (oldStreakPill) oldStreakPill.remove(); if (oldBadgesDiv) oldBadgesDiv.remove();
+      if (streakData.current === 0) return;
+      const streakPill = document.createElement('span'); streakPill.id = 'streakPill'; streakPill.className = 'pill';
+      streakPill.style.background = 'linear-gradient(145deg, #ff6b6b, #ff8787)'; streakPill.style.color = 'white'; streakPill.style.fontWeight = '600';
+      if (streakData.isNewMilestone && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) { streakPill.style.animation = 'streak-pulse 2s ease-in-out'; }
+      const bestText = streakData.best > streakData.current ? ` · Best: ${streakData.best}` : '';
+      streakPill.innerHTML = '🔥 <b>Streak ' + streakData.current + '</b>' + bestText; metaDiv.appendChild(streakPill);
+      const achievedBadges = streakManager.getAchievedBadges(streakData.milestones);
+      if (achievedBadges.length > 0) {
+        const badgesDiv = document.createElement('div'); badgesDiv.id = 'badgesDiv'; badgesDiv.style.display = 'flex'; badgesDiv.style.gap = '8px';
+        badgesDiv.style.flexWrap = 'wrap'; badgesDiv.style.marginTop = '12px'; badgesDiv.style.marginBottom = '4px';
+        achievedBadges.forEach(badge => {
+          const badgeSpan = document.createElement('span'); badgeSpan.className = 'badge-item'; badgeSpan.style.display = 'inline-flex';
+          badgeSpan.style.alignItems = 'center'; badgeSpan.style.gap = '4px'; badgeSpan.style.padding = '6px 10px'; badgeSpan.style.borderRadius = '8px';
+          badgeSpan.style.background = 'rgba(255, 255, 255, 0.08)'; badgeSpan.style.border = '1px solid rgba(255, 255, 255, 0.12)';
+          badgeSpan.style.fontSize = '13px'; badgeSpan.style.color = 'var(--muted)';
+          badgeSpan.innerHTML = badge.emoji + ' <span style="color: var(--text); font-weight: 600;">' + badge.label + '</span>';
+          badgesDiv.appendChild(badgeSpan);
+        });
+        metaDiv.parentElement.insertBefore(badgesDiv, metaDiv.nextSibling);
+      }
+    }
+
 
     // --------- Tenor API Search Terms ---------
     const TENOR_SEARCH_TERMS = {
@@ -503,7 +752,11 @@
       const target = nextRotationParts(nowParts);
       const dd = roughCountdown(nowParts, target);
       elCountdown.textContent = `${String(dd.h).padStart(2,'0')}:${String(dd.m).padStart(2,'0')}:${String(dd.s).padStart(2,'0')}`;
-      elNextInfo.textContent = `Nächstes Kompliment um ${String(ROTATE_HOUR).padStart(2,'0')}:00 (${TIMEZONE.replace('Europe/','')})`;
+elNextInfo.textContent = `Nächstes Kompliment um ${String(ROTATE_HOUR).padStart(2,'0')}:00 (${TIMEZONE.replace('Europe/','')})`;
+
+      // Streak Update
+      const streakData = streakManager.update(nowParts);
+      renderStreakUI(streakData);;
     }
 
     // tick
@@ -563,6 +816,316 @@
 
     // initial load
     updateUI();
+
+    // ===== Tinten-Kalligrafie Animation =====
+    function initInkSignature(){
+      const svg = document.getElementById('inkSig');
+      if(!svg) return;
+      
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      // Länge pro Pfad berechnen → dasharray/offset setzen
+      const paths = svg.querySelectorAll('path');
+      paths.forEach(p=>{
+        try{
+          const len = Math.max(1, Math.round(p.getTotalLength()));
+          p.style.setProperty('--len', len);
+          p.style.strokeDasharray = String(len);
+          p.style.strokeDashoffset = String(len);
+        }catch(e){}
+      });
+      
+      function play(){
+        if(reduce){
+          // Keine Animation: direkt "fertig"
+          svg.classList.remove('ink-anim');
+          svg.classList.add('done');
+          paths.forEach(p=>{ p.style.strokeDashoffset = '0'; });
+          return;
+        }
+        svg.classList.remove('done');
+        svg.classList.remove('ink-anim');
+        void svg.offsetWidth; // reflow zum Neustarten
+        svg.classList.add('ink-anim');
+        // Nach Ende leichten Glow setzen
+        setTimeout(()=>{ svg.classList.add('done'); }, 2300);
+      }
+      
+      // Initial starten
+      play();
+      
+      // Re-ink bei Klick auf Brand
+      document.getElementById('brand')?.addEventListener('pointerdown', (e)=>{
+        // Nur triggern wenn nicht auf Button geklickt
+        if(!e.target.closest('button')){
+          play();
+        }
+      });
+    }
+    
+    // Nach DOM-Load initialisieren
+    initInkSignature();
+
+
+    // ===== Emoji Memory Game =====
+    const memoryUI = {
+      openBtn: document.getElementById('openMemory'),
+      overlay: document.getElementById('memoryOverlay'),
+      closeBtn: document.getElementById('memoryClose'),
+      modeSel: document.getElementById('memoryMode'),
+      restartBtn: document.getElementById('memoryRestart'),
+      grid: document.getElementById('memoryGrid'),
+      time: document.getElementById('memTime'),
+      moves: document.getElementById('memMoves'),
+      best: document.getElementById('memBest'),
+    };
+    let memoryState = null;
+    let lastFocusEl = null;
+
+    const EMOJI_POOL = [
+      // Tiere - süß & niedlich
+      '🐱','🐈','🐈‍⬛','🐕','🐶','🐕‍🦺','🐩','🐰','🐇','🐹','🐭','🐻','🐻‍❄️','🧸',
+      '🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦆','🦉','🦄','🐴',
+      '🦋','🐝','🐞','🐌','🦔','🐾','🦊','🐙',
+      
+      // Herzen - verschiedene Farben & Styles
+      '💖','💝','💘','💕','💗','💓','💞','💜','💙','💚','🧡','💛','🤍','🖤','🤎',
+      '❤️','❣️','💟','💌',
+      
+      // Essen & Trinken - süß & lecker
+      '🍓','🍒','🍑','🍊','🍋','🍌','🍉','🍇','🍎','🍏','🥝','🍐','🫐',
+      '🍰','🧁','🍪','🍩','🍭','🍬','🍫','🍮','🍯','🎂',
+      '☕','🍵','🧃','🥤','🧋',
+      
+      // Natur & Blumen
+      '🌸','🌺','🌻','🌷','🌹','🥀','🏵️','💐','🌼','🌾','🍀','🌿','🌱',
+      '🌈','⭐','✨','💫','🌟','⚡','☀️','🌙','🌝','☁️','🌤️',
+      
+      // Aktivitäten & Objekte
+      '🎀','🎁','🎈','🎉','🎊','🎵','🎶','🎧','🎨','🖌️','✏️','📚','📖',
+      '🧶','🪡','🪢','🧵','🪄','🔮','💎','👑','🦢',
+      
+      // Smileys - fröhlich & süß
+      '😊','😄','😁','🥰','😍','🤗','😘','😚','😙','🥳','😇','🤩','😻',
+      '😸','😺','😽','🙀','😼','😹','😾',
+      
+      // Sonstiges süß
+      '🍦','🧊','🌠','🪐','🌏','🎪','🎭','🎬','📷','🌃','🎇','🎆'
+    ];
+
+    function ymdToStr(ymd){ return `${ymd.year}-${String(ymd.month).padStart(2,'0')}-${String(ymd.day).padStart(2,'0')}`; }
+
+    function seededRng(seedStr){
+      let h=1779033703^seedStr.length;
+      for(let i=0;i<seedStr.length;i++){ h = Math.imul(h^seedStr.charCodeAt(i), 3432918353); h = (h<<13)|(h>>>19); }
+      return ()=>{ h = Math.imul(h^ (h>>>16), 2246822507); h = Math.imul(h^ (h>>>13), 3266489909); const t = (h^ (h>>>16))>>>0; return t/4294967296; };
+    }
+
+    function deckForMode(mode){
+      let cols, rows, pairs;
+      if(mode==='4x4'){ cols=4; rows=4; pairs=8; }
+      else if(mode==='5x6'){ cols=6; rows=5; pairs=15; }
+      else { cols=5; rows=4; pairs=10; }
+
+      const now = new Date();
+      const ymd = rotationYMD(partsFrom(now));
+      const seed = (mode==='daily') ? `daily-${ymdToStr(ymd)}` : `free-${mode}-${now.getTime()}`;
+      const rnd = seededRng(seed);
+
+      const candidates = [...EMOJI_POOL];
+      for(let i=candidates.length-1;i>0;i--){ const j = Math.floor(rnd()*(i+1)); [candidates[i],candidates[j]]=[candidates[j],candidates[i]]; }
+      const pick = candidates.slice(0,pairs);
+      const deck = [...pick, ...pick].map((e,i)=>({id:i, emoji:e}));
+      for(let i=deck.length-1;i>0;i--){ const j = Math.floor(rnd()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+      return {cols,rows,deck};
+    }
+
+    function fmtTime(sec){ const m=Math.floor(sec/60), s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+
+    function bestKey(mode){ return `nadja.memory.best.${mode}`; }
+    function loadBest(mode){
+      try{ return JSON.parse(localStorage.getItem(bestKey(mode))||'null'); }catch(e){ return null; }
+    }
+    function saveBest(mode, data){
+      try{ localStorage.setItem(bestKey(mode), JSON.stringify(data)); }catch(e){}
+    }
+
+    function renderGrid(mode){
+      const {cols,rows,deck} = deckForMode(mode);
+      console.log('Rendering grid:', {mode, cols, rows, deckLength: deck.length});
+      memoryUI.grid.dataset.mode = mode;
+      memoryUI.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(44px,1fr))`;
+      memoryUI.grid.innerHTML = '';
+
+      memoryState = { mode, cols, rows, deck, first:null, lock:false, moves:0, time:0, timer:null, matched:0, started:false };
+
+      deck.forEach((card,idx)=>{
+        console.log(`Card ${idx}:`, card.emoji);
+        
+        const tile = document.createElement('button');
+        tile.className = 'tile';
+        tile.type = 'button';
+        tile.setAttribute('aria-label', 'Verdeckt');
+        tile.setAttribute('data-idx', String(idx));
+        tile.setAttribute('data-emoji', card.emoji); // Speichere Emoji als data-Attribut
+        
+        const face = document.createElement('div');
+        face.className = 'tile-face';
+        face.textContent = '★'; // Start mit Stern
+        
+        tile.appendChild(face);
+        
+        tile.addEventListener('click', onFlip);
+        tile.addEventListener('keydown', e=>{ 
+          if(e.code==='Enter'||e.code==='Space') { 
+            e.preventDefault(); 
+            tile.click(); 
+          }
+        });
+        
+        memoryUI.grid.appendChild(tile);
+      });
+      
+      console.log('Created tiles:', memoryUI.grid.children.length);
+      console.log('Grid HTML:', memoryUI.grid.innerHTML.substring(0, 200));
+
+      memoryUI.moves.textContent = '0';
+      memoryUI.time.textContent = '00:00';
+      const best = loadBest(mode);
+      memoryUI.best.textContent = best ? `${best.moves} / ${fmtTime(best.time)}` : '—';
+    }
+
+    function startTimer(){
+      if(memoryState.started) return;
+      memoryState.started = true;
+      memoryState.timer = setInterval(()=>{
+        memoryState.time += 1;
+        memoryUI.time.textContent = fmtTime(memoryState.time);
+      }, 1000);
+    }
+
+    function stopTimer(){
+      if(memoryState.timer){ clearInterval(memoryState.timer); memoryState.timer = null; }
+    }
+
+    function onFlip(e){
+      const tile = e.currentTarget;
+      if(memoryState.lock || tile.disabled) return;
+      const idx = parseInt(tile.getAttribute('data-idx'),10);
+      const card = memoryState.deck[idx];
+      const emoji = tile.getAttribute('data-emoji');
+
+      if(!memoryState.started) startTimer();
+      if(tile.classList.contains('flipped')) return;
+
+      tile.classList.add('flipped');
+      // Zeige Emoji direkt!
+      const face = tile.querySelector('.tile-face');
+      face.textContent = emoji;
+      tile.setAttribute('aria-label', emoji);
+
+      if(!memoryState.first){
+        memoryState.first = {idx, tile, emoji: card.emoji};
+        return;
+      }
+
+      if(memoryState.first.idx === idx) return;
+
+      memoryState.lock = true;
+      memoryState.moves += 1;
+      memoryUI.moves.textContent = String(memoryState.moves);
+
+      const first = memoryState.first;
+      const second = {idx, tile, emoji: card.emoji};
+
+      const isMatch = first.emoji === second.emoji;
+      const settle = ()=>{
+        if(!isMatch){
+          // Zurücksetzen: Stern wieder anzeigen
+          first.tile.classList.remove('flipped');
+          second.tile.classList.remove('flipped');
+          first.tile.querySelector('.tile-face').textContent = '★';
+          second.tile.querySelector('.tile-face').textContent = '★';
+          first.tile.setAttribute('aria-label','Verdeckt');
+          second.tile.setAttribute('aria-label','Verdeckt');
+        } else {
+          first.tile.disabled = true;
+          second.tile.disabled = true;
+          memoryState.matched += 2;
+          
+          if(memoryState.matched === memoryState.deck.length){
+            stopTimer();
+            const best = loadBest(memoryState.mode);
+            const better = !best || memoryState.moves < best.moves || (memoryState.moves===best.moves && memoryState.time < best.time);
+            if(better) saveBest(memoryState.mode, {moves: memoryState.moves, time: memoryState.time});
+
+            if(window.matchMedia('(prefers-reduced-motion: no-preference)').matches){
+              memoryUI.grid.style.animation = 'victory-pulse 0.6s ease-in-out';
+              setTimeout(()=> memoryUI.grid.style.animation = '', 600);
+            }
+            
+            const nb = loadBest(memoryState.mode);
+            memoryUI.best.textContent = nb ? `${nb.moves} / ${fmtTime(nb.time)}` : '—';
+            
+            setTimeout(()=>{
+              alert(`🎉 Gewonnen! Züge: ${memoryState.moves}, Zeit: ${fmtTime(memoryState.time)}`);
+            }, 300);
+          }
+        }
+        memoryState.first = null;
+        memoryState.lock = false;
+      };
+
+      const delay = isMatch ? 220 : (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 620);
+      setTimeout(settle, delay);
+    }
+
+    function openMemory(){
+      lastFocusEl = document.activeElement;
+      memoryUI.overlay.hidden = false;
+      memoryUI.overlay.setAttribute('aria-hidden','false');
+      memoryUI.closeBtn.focus();
+      renderGrid(memoryUI.modeSel.value);
+    }
+
+    function closeMemory(){
+      memoryUI.overlay.hidden = true;
+      memoryUI.overlay.setAttribute('aria-hidden','true');
+      stopTimer();
+      if(lastFocusEl && lastFocusEl.focus) lastFocusEl.focus();
+    }
+
+    // Debug: Check if elements exist
+    console.log('Memory elements:', {
+      openBtn: memoryUI.openBtn,
+      overlay: memoryUI.overlay,
+      closeBtn: memoryUI.closeBtn
+    });
+
+    if(memoryUI.openBtn){
+      memoryUI.openBtn.addEventListener('click', openMemory);
+      console.log('Memory button click listener attached');
+    } else {
+      console.error('Memory button not found!');
+    }
+    
+    if(memoryUI.closeBtn){
+      memoryUI.closeBtn.addEventListener('click', closeMemory);
+    }
+    
+    if(memoryUI.modeSel){
+      memoryUI.modeSel.addEventListener('change', ()=>renderGrid(memoryUI.modeSel.value));
+    }
+    
+    if(memoryUI.restartBtn){
+      memoryUI.restartBtn.addEventListener('click', ()=>renderGrid(memoryUI.modeSel.value));
+    }
+    
+    document.addEventListener('keydown', e=>{ 
+      if(!memoryUI.overlay.hidden && e.key==='Escape') closeMemory(); 
+    });
+
   </script>
+
 </body>
 </html>
